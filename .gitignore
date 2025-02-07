@@ -1,5 +1,6 @@
 # Local .terraform directories
 **/.terraform/*
+**/.terraform.*
 
 # .tfstate files
 *.tfstate
@@ -32,3 +33,7 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+#Ignore key
+*.pem
+tls_private_key.generated_key.private_key_pem
