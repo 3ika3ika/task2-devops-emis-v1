@@ -1,6 +1,20 @@
 #!/bin/bash
-yum update -y
-yum install -y httpd
-systemctl start httpd
-systemctl enable httpd
-echo "<h1>${env_var}</h1>" > /var/www/html/index.html
+
+# Set an environment variable
+export ENV_VAR="${env_var}"
+
+# Execute user_data_users.sh
+echo "Running user_data_users.sh..."
+${script1}
+
+# Execute user_data_logs.sh
+echo "Running user_data_logs.sh..."
+${script2}
+
+# Execute user_data_apache.sh
+echo "Running user_data_apache.sh..."
+${script3}
+
+# Execute user_data_cron
+echo "Running user_data_cron.sh..."
+${script4}
