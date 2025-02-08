@@ -34,3 +34,7 @@ variable "ssh_cidr" {
   type        = list(string)
   default = ["0.0.0.0/0"]
 }
+
+variable "iam_instance_profile_name" {
+  type = string
+}

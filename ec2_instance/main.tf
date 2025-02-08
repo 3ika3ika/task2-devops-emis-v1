@@ -51,8 +51,8 @@ resource "aws_instance" "ec2_instance" {
   subnet_id     = var.subnet_id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   key_name = aws_key_pair.ec2_key_pair.key_name
-
   user_data = local.user_data
+  iam_instance_profile = var.iam_instance_profile_name
 
   tags = {
     Name = "${var.name}-instance"
