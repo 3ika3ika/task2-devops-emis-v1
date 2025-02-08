@@ -5,6 +5,8 @@ locals {
     script2 = file("${path.module}/user_data/user_data_logs.sh")
     script3 = file("${path.module}/user_data/user_data_apache.sh")
     script4 = file("${path.module}/user_data/user_data_cron.sh")
-    env_var = "Hello from env_var in locals.tf!"  # Replace with your desired value
+    script5 = file("${path.module}/user_data/user_data_cloudwatch_agent.sh")
+    env_var = "Hello from env_var in locals.tf!"
+
   })
 }

@@ -13,3 +13,8 @@ module "ec2_instance" {
 module "s3_buckets" {
   source    = "./s3_buckets"
 }
+
+module "cloudwatch_alarm" {
+  source = "./cloud_watch"
+  instance_id = module.ec2_instance.ec2_id
+}

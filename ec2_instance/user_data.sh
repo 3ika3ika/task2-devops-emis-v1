@@ -18,3 +18,7 @@ ${script3}
 # Execute user_data_cron
 echo "Running user_data_cron.sh..."
 ${script4}
+
+# Execute user_data_cloudwatch_agent.sh
+echo "Running user_data_cloudwatch_agent.sh..."
+${script5}
