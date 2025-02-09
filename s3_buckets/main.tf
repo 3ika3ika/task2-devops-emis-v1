@@ -38,11 +38,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "task2_lifecycle" {
     status = "Enabled"
 
     filter {
-      prefix = ""  # Apply to all objects in the bucket
+      prefix = ""  
     }
 
     expiration {
-      days = 30  # Delete objects older than 30 days
+      days = 30  
     }
   }
 }
@@ -50,8 +50,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "task2_lifecycle" {
 resource "aws_s3_object" "my_file" {
   bucket = aws_s3_bucket.task2_bucket.id
   key    = var.file_name
-  source = "./s3_buckets/files_for_upload/space-out.png"  # The local path to your JPG image
-  acl    = "public-read"  # Make the image publicly accessible
+  source = "./s3_buckets/files_for_upload/space-out.png"  
+  acl    = "public-read" 
+  depends_on = [
+    aws_s3_bucket_acl.task2_bucket_acl,
+    aws_s3_bucket_ownership_controls.task2_ownership
+  ]
 }
 
 output "image_url" {
