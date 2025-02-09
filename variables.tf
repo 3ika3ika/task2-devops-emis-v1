@@ -18,3 +18,13 @@ variable "ssh_cidr" {
   type        = list(string)
   default = ["0.0.0.0/0"]
 }
+
+variable "endpoint_email" {
+  description = "The email you want to recieve CloudWatch Alarm notifications"
+  type = string
+}
+
+variable "bucket_name" {
+  description = "The name of your bucket must be unique across all AWS buckets globally"
+  type = string
+}

@@ -5,7 +5,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_usage" {
   evaluation_periods  = 1
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = 300  # 5 minutes (in seconds)
+  period              = 300  # in seconds
   statistic           = "Average"
   threshold           = 70
 
@@ -27,5 +27,11 @@ resource "aws_sns_topic" "cpu_alarm_notification" {
 resource "aws_sns_topic_subscription" "email_subscription" {
   topic_arn = aws_sns_topic.cpu_alarm_notification.arn
   protocol  = "email"
-  endpoint  = "tomovjivko97@gmail.com"  # Replace with your email address
+  endpoint  = var.endpoint_email  
+}
+
+resource "aws_cloudwatch_log_group" "apache_logs" {
+  name = "/aws/apache/logs"
+
+  retention_in_days = 7  
 }

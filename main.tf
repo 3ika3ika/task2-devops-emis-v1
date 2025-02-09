@@ -12,9 +12,11 @@ module "ec2_instance" {
 
 module "s3_buckets" {
   source    = "./s3_buckets"
+  bucket_name = var.bucket_name
 }
 
 module "cloudwatch_alarm" {
   source = "./cloud_watch"
   instance_id = module.ec2_instance.ec2_id
+  endpoint_email = var.endpoint_email
 }

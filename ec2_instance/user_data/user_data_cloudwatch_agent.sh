@@ -17,7 +17,7 @@ cat <<EOL > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
           {
             "file_path": "/var/log/httpd/access_log",
             "log_group_name": "/aws/apache/logs",
-            "log_stream_name": "test-stream-dshahudfisfghuidusuifgisgfih"
+            "log_stream_name": "ec2-stream"
           }
         ]
       }
@@ -25,6 +25,9 @@ cat <<EOL > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
   }
 }
 EOL
+
+# Add log entry to activate creation of log group
+echo "Test log entry" | sudo tee -a /var/log/httpd/access_log > /dev/null
 
 # Start the CloudWatch Agent using systemctl
 sudo systemctl start amazon-cloudwatch-agent
@@ -35,5 +38,3 @@ sudo systemctl enable amazon-cloudwatch-agent
 # Verify CloudWatch Agent status
 sudo systemctl status amazon-cloudwatch-agent
 
-# Optionally restart the CloudWatch Agent (in case of any config changes)
-#sudo systemctl restart amazon-cloudwatch-agent

@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "task2_bucket" {
-  bucket = "zikazika-task2-bucket"  # Change this to a unique bucket name
+  bucket = var.bucket_name  # Change this to a unique bucket name
 }
 
 resource "aws_s3_bucket_ownership_controls" "task2_ownership" {
