@@ -7,8 +7,3 @@ terraform {
     }
   }
 }
-
-provider "aws" {
-  alias  = "us_west_3"
-  region = "us-west-3"
-}
