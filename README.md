@@ -1,8 +1,18 @@
-# README.md
+# Terraform-EC2-S3-IAM-CloudWatch
 
-### **Linux**
+> *This terraform code creates infrastructure in AWS, consisting of EC2, S3, IAM, CloudWatch. The code is organised in modules to promote code reusability. Modules are called in root/main.tf.*
+> 
+
+# How to use (step by step):
 
 ### 1. Install AWS CLI (if not installed)
+
+Check if you have aws installed on your machine:
+
+```
+
+aws --version
+```
 
 For **Ubuntu/Debian**:
 
@@ -24,7 +34,7 @@ For **MacOS**:
 brew install awscli
 ```
 
-**Verify Installation**:
+Verify installation:
 
 ```
 
@@ -118,14 +128,12 @@ SSH into the instance (ec2-user is default for Linux AMIs. For other AMIs make s
 ssh -i <your-desired-key-name>.pem ec2-user@<pubic-ip-output>
 ```
 
-This terraform code creates infrastructure in AWS, consisting of EC2, S3, IAM, CloudWatch. The code is organised in modules to promote code reusability. Modules are called in root/main.tf.
-
-Lets describe the content in detail: 
+# Resources
 
 ## EC2
 
-- Create security group, ec2 instance, keypair
-- Execute user scripts (described below)
+- Create security group (ingress 22,80,443), ec2 instance (free tier), keypair
+- Execute user scripts upon initial boot [once] (described at the bottom of the document)
 
 ## S3
 
@@ -143,29 +151,151 @@ Lets describe the content in detail:
 - Create CloudWatch Alarm that triggers an email notification (SNS subscription) if CPU usage exceeds 70% for 5 minutes (CloudWatch Alarm)
 - Create log file with retention of 7 days **/aws/apache/logs**
 
-### User scripts
+## User scripts (EC2)
 
 Upon initial boot, couple of .sh scripts are executed (in sequence defined in ./ec2_instance/user_data.sh). The scripts below are located in ./ec2_instance/user_data/
 
-- user_data_users.sh
-    - Install HTTPD (Apache)
-    - Create a new user devopsadmin with password admin, add it to the sudo group, and  restrict executing sudo su
-    - Disable direct root login
-    - Install and set firewall rules to allow only port 22, 80, 443
-- user_data_logs.sh
-    - List all running processes and find any process listening on port 8080 and log this info to **/var/log/my-script.log**
-    - Set up custom log rotation for **/var/log/custom_app.log**
-- user_data_apache.sh
-    - Set up Apache server as reverse proxy that forward traffic to localhost:5000
-    - Run Python HTTP server  in the background (port 5000) which serve the content of /var/www/html/index.html
-    - Now when you try to reach the Public IPv4 DNS (make sure to use http NOT https) of the EC2 instance, you are redirected to the python server on port 5000
-- user_data_cron.sh
-    - Install Apache if not present
-    - Start and enable Apache
-    - Start Python HTTP server
-    - Install Cron if not installed
-    - Create script  and cron job to check Apache and Python every 5 minutes **CHECK_SCRIPT="/home/ec2-user/check_httpd.sh”**
-    - logs of cron job **LOG_FILE="/var/log/apache_check.log”**
-- user_data_cloudwatch_agent.sh
-    - Create CloudWatch Agent conf file to trail Apache logs **/var/log/httpd/access_log**
-    - Add the file to log group and log stream (which is within the log group)
+### 1. user_data_users.sh
+
+- Install HTTPD (Apache)
+- Create a new user devopsadmin with password admin, add it to the sudo group, and  restrict executing sudo su
+- Disable direct root login
+- Install and set firewall rules to allow only port 22, 80, 443
+
+### 2. user_data_logs.sh
+
+- List all running processes and find any process listening on port 8080 and log this info to **/var/log/my-script.log**
+- Set up custom log rotation for **/var/log/custom_app.log**
+
+### 3. user_data_apache.sh
+
+- Set up Apache server as reverse proxy that forward traffic to localhost:5000
+- Run Python HTTP server  in the background (port 5000) which serve the content of /var/www/html/index.html
+- Now when you try to reach the Public IPv4 DNS (make sure to use http NOT https) of the EC2 instance, you are redirected to the python server on port 5000
+- *TIP: Uncomment location block and replace IP to allow only specific CIDR to access the server*
+
+```
+<Location />
+       #Require ip 192.168.1.0/24 #Uncomment and replace with proper CIDR to make restrictions active 
+    </Location>
+```
+
+### 4. user_data_cron.sh
+
+- Install Apache if not present
+- Start and enable Apache
+- Start Python HTTP server
+- Install Cron if not installed
+- Create script  and cron job to check Apache and Python every 5 minutes **CHECK_SCRIPT="/home/ec2-user/check_httpd.sh”**
+- logs of cron job **LOG_FILE="/var/log/apache_check.log”**
+
+### user_data_cloudwatch_agent.sh
+
+- Create CloudWatch Agent conf file to trail Apache logs **/var/log/httpd/access_log**
+- Add the file to log group and log stream (which is within the log group)
+
+# Useful commands within EC2 instance
+
+## CloudWatch
+
+### Test CPU alarm (may take longer than 5 min (insufficient data → alarm)
+
+```bash
+sudo yum install -y stress
+```
+
+```bash
+stress --cpu 1 --timeout 600
+```
+
+Monitor with:
+
+```bash
+top
+```
+
+### Test CloudWatch Agent for Apache logs (user_data_cloudwatch_agent.sh)
+
+If the agent is working:
+
+```bash
+sudo systemctl status amazon-cloudwatch-agent
+```
+
+Check the logs for any abnormalities:
+
+```bash
+sudo cat /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log
+```
+
+List if log group was created:
+
+```bash
+aws logs describe-log-groups
+
+```
+
+List log streams:
+
+```bash
+aws logs describe-log-streams --log-group-name "/aws/apache/logs"
+
+```
+
+List Apache logs (each time you try to access the Public IPv4 DNS a record is created**)**
+
+```bash
+sudo cat /var/log/httpd/access_log
+```
+
+## CRON (user_data_cron.sh)
+
+List cron jobs 
+
+```bash
+sudo crontab -l
+```
+
+Check cron job executions log 
+
+```bash
+sudo cat /var/log/apache_check.log
+```
+
+Check Python web server logs. That file has log rotation setup in user_data_logs.sh 
+
+```bash
+sudo cat /var/log/custom_app.log
+```
+
+## USERS & FireWall
+
+List all human users
+
+```bash
+awk -F: '$3 >= 1000 {print $1}' /etc/passwd
+```
+
+Check currently logged under 
+
+```bash
+whoami
+```
+
+Log in to another user
+
+```bash
+su - <username>
+```
+
+Check sudo priviledges of current user
+
+```bash
+sudo -l
+```
+
+Check the current firewall rules:
+
+```bash
+sudo firewall-cmd --list-all
+```
